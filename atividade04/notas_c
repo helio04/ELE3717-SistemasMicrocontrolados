@@ -1,0 +1,188 @@
+
+ansi C
+
+palavras chave
+
+auto
+break
+case
+char
+const
+continue
+default
+do
+double
+else
+enum
+extern
+float
+for
+goto
+if
+int
+long
+register
+return
+short
+signed
+sizeof
+static
+struct
+switch
+typedef
+union
+unsigned
+void
+volatile
+while
+
+variaveis são case sensistive
+não pode começar por números
+nome pode conter apenas letras numeros e _
+nao pode ser palavra reservada
+identificador não tem limite de tamanho
+
+variaveis devem ser declaradas antes de utilizar, especificando o tipo
+
+void sem valor
+char 1 byte
+int 2 bytes
+float 4 bytes
+double 8 bytes
+
+intn_t (n bytes)
+uintn_t (n bytes)
+
+mod de tipo
+short
+long
+unsigned
+signed
+forçar (cast) -> (int) ou (float) ou (double)
+
+ex:
+unsigned char a = 25;
+short int b = 3;
+float c;
+c = (float) a/b;
+
+mod de escopo
+
+v locais: nao necessitam de definição de escopo e existem apenas dentro das funções
+v registrador: necessita do escopo register, não devem ser globais e podem não ser atendidas pelo compilador
+v constantes: necessita do escopo const não pode ser alterado
+v volateis: necessita do escopo volatile não permite o compilador otimizaar pois pode possuir acesso externo
+v estaticas: escopo static, mesmo quando global é apenas de conhecimento do próprio arquivo
+v externas: necessita do escopo extern para indicar que há variável definida em outro arquivo
+
+
+variaveis constantes podem ocupar espaço diferente das variaveis padrão. EM alguns casos pode ser escrita na flash
+
+variaveis compartilhadas entre o isr e as funções normais devem ser definidas como volatile
+
+programação bare metal (baixo nível)
+
+modularizar codigo fonte
+
+arquitetura Superloop
+organizar tarefas em um loop continuo, tarefas executadas sequencialmente
+
+----------------exemplo-----
+int main() {
+setup()
+
+while(1){
+task1()
+task2()
+task3()
+}
+return 0;
+}
+----------------------------------
+
+ATMEGA328P
+
+DDRx para configura o direcionamento da porta (1 saida 0 entrada)
+PINx para leitura do valor de entrada do pino
+Portx para escrita
+
+def F_CPU 16000000UL
+<avr/io.h>
+<util/delay.h>
+
+int externa 0
+
+EICRA
+EIMSK
+EIFR
+
+change interrupto
+
+PCICR
+PCMSK2
+
+
+timer 0
+
+TCCR0A
+TCCR0B
+TCNT0
+TIMSK0
+T0IE0
+
+timer 1
+TCCR1A
+TCCR1B
+TCCR1C
+TCNT1
+TIMSK1
+OCR1A
+
+
+leitura AD
+
+ADMUX
+ADCSRA
+ADCSRB
+ADCSRA
+ADEN
+ADCSRA
+ADC
+
+COMPARADOR AD
+DIDR1
+ACSR
+ACIE
+AC0
+
+EEPROM
+
+EEARH
+EEARL
+EEDR
+EECR
+EEPE
+EEMPE
+
+COM SPI
+
+SPCR
+SPDR
+
+USART
+
+UBRR0H
+UBRR0L
+UCSR0B
+UCSR0C
+UDR0
+UDRE0
+
+
+I2C
+
+TWCR
+TWINT
+TWDR
+TWSR
+TWBR

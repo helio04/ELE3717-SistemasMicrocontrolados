@@ -1,35 +1,67 @@
 .include "m328pdef.inc"
+;;;;defs
+.def centena= r3
+.def dezena= r4
+.def unidade= r5
+.def step= r6
+.def vholder= r7
+.def carry= r8
+
+.def opi= r16
+.def aux1= r17
+.def aux2= r18
+.def output= r19
+.def controle= r20 
+.def loopbcd=r21
+.def aux=r22
+.def vholderbcd=r23
+.def estado=r31
+.equ addrmaxcent= 0x0120
+.equ addrmaxdez=0x0121
+.equ addrmaxuni= 0x0122
+.equ addrmincent= 0x0123
+.equ addrmindez= 0x0124
+.equ addrminuni= 0x0125
+.equ addrcurcent= 0x0110
+.equ addrcurdez= 0x0111
+.equ addrcuruni= 0x0112
+.equ red=1
+.equ green=2
+.equ blue=3
+.equ botaosetup=2
+.equ botaoup=1
+.equ botaodown=3    
+.equ PCINT1_vect=0x0008
+;;;;end_defs
+
 .org 0x0000
 rjmp setup
 
-.equ centena, r3
-.equ dezena, r4
-.equ unidade, r5
-.equ step, r6
-.equ vholder, r7
-.equ carry, r8
+.org PCINT1_vect
+rjmp interrupt_botoes
 
-.equ opi, r16
-.equ aux1, r17
-.equ aux2, r18
-.equ output, r19
-.equ controle, r20 
-.equ addrmaxcent, 0x0120
-.equ addrmaxdez, 0x0121
-.equ addrmaxuni, 0x0122
-.equ addrmincent, 0x0123
-.equ addrmindez, 0x0124
-.equ addrminuni, 0x0125
-.equ addrcurcent, 0x0110
-.equ addrcurdez, 0x0111
-.equ addrcuruni, 0x0112
+
 setup:
 ;;configurar pinos
+ldi opi, 0xFF
+out DDRD, opi
+out ddrb, opi
+ldi opi, 0x00
+out DDRC, opi
 
 ;;configurar ADC
+ldi opi, (1<<REFS0)
+sts ADMUX, opi
+ldi opi, (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0)
+sts ADCSRA, opi
+
 
 ;;configurar interrupts 1,2,3
-
+ldi opi, (1<<PCIE1)
+sts PCICR, opi
+ldi opi, (1<<PCINT9) | (1<<PCINT10) | (1<<PCINT11)
+sts PCMSK1, opi
+sei
 
 ;;configurar user_config
 ldi controle, 0x01
@@ -55,15 +87,27 @@ sts addrmaxuni, opi
 
 rjmp loop
 
+interrupt_botoes:
+in opi, PINC 
+sbrs opi, botaodown
+rjmp contardown
+sbrs opi, botaoup
+rjmp contarup
+sbrs opi, botaosetup
+rjmp int_config_cont
+;;impossivel chegar aqui mas vai que né
+clr opi
+reti
 
 contarup:
+ldi r29, 15
 clr carry
 lds opi, addrcurcent
 mov centena, opi
 lds opi, addrcurdez
 mov dezena,opi
 lds opi, addrcuruni
-mov uni, opi
+mov unidade, opi
 ldi opi, 10
 add unidade, step
 compareunidade:
@@ -116,7 +160,7 @@ sts addrcurdez, opi
 mov opi, unidade
 sts addrcuruni, opi
 clr opi
-ret
+reti
 
 
 contardown:
@@ -126,7 +170,17 @@ mov centena, opi
 lds opi, addrcurdez
 mov dezena,opi
 lds opi, addrcuruni
-mov uni, opi
+mov unidade, opi
+ldi opi, 0
+cp centena, opi
+brne continue_contar_down
+cp dezena, opi
+brne continue_contar_down
+cp unidade, opi
+brne continue_contar_down
+rjmp comparecommin
+
+continue_contar_down:
 ldi opi, 10
 compareunidadesubtracao:
 cp unidade, step
@@ -178,14 +232,17 @@ clr opi
 rjmp salvenovovalor
 
 
-loop:
 
+
+loop:
 lds opi, addrcurcent
 mov centena, opi
 lds opi, addrcurdez
 mov dezena, opi
-lds addrcuruni
+lds opi, addrcuruni
 mov unidade, opi
+
+
 rcall exibircentena
 rcall exibirdezena
 rcall exibirunidade
@@ -200,6 +257,7 @@ rjmp wait_loop
 end_wait:
 ret
 
+
 oconverter:
 ;;conversao com logica inversa e ordem oposta
 ;; vholder[3:0] -> -aux[4:7]
@@ -209,82 +267,96 @@ oconverter:
 ;; vholder [0] -> -aux[7]
 clr output
 ;; se não for logica inversa, usar sbrc
-sbrs vholder, 3
+sbrc vholder, 3
 sbr output, 0b00010000
-sbrs vholder, 2
+sbrc vholder, 2
 sbr output, 0b00100000
-sbrs vholder, 1
+sbrc vholder, 1
 sbr output, 0b01000000
-sbrs vholder, 0
+sbrc vholder, 0
 sbr output, 0b10000000
 ret
 ;;;;----output-converter-end-------
 exibircentena:
-rcall waiting
 mov vholder, centena
 rcall oconverter
 cbr output, 0b00001100 ;;sbr se inverso
-ldi opi, 0b00000001 ;; clr se inverso 
-sts portb, opi
-sts portd, output
+in opi, pinb
+sbr opi, (1<<0);; cbr se inverso
+out portb, opi
+out portd, output
+rcall waiting
 rcall waiting
 ret
 
 exibirdezena:
-rcall waiting
 mov vholder,dezena
 rcall oconverter
 sbr output, 0b00001000 ;;cbr se inverso
 cbr output, 0b00000100 ;; sbr se inverso
-clr opi ;; ldi 1 se inverso
-sts portb, opi
-sts portd, output 
-rcall waiting 
+in opi, pinb
+cbr opi, (1<<0);; sbr se inverso
+out portb, opi
+out portd, output 
+rcall waiting
+rcall waiting
 ret
 
 exibirunidade:
-rcall waiting
 mov vholder, unidade
 rcall oconverter
 cbr output, 0b00001000 ;;sbr se inverso
 sbr output, 0b00000100 ;; cbr se inverso
-clr opi ;; ldi 1 se inverso
-sts portb, opi
-sts portd, output 
-rcall waiting 
+in opi, pinb
+cbr opi, (1<<0);; sbr se inverso
+out portb, opi
+out portd, output 
+rcall waiting
+rcall waiting
 ret
 
 
 int_config_cont:
 ;;acende o led
 ;;controle: bit 1, ajuste minimo; bit 2, ajuste máximo, bit 3, ajuste step
-ldi opi, 0x02
-cp controle, opi
+
+cpi controle, (1<<1)
 breq setup_lower_bound
-ldi opi, 0x04
-cp controle, opi
+cpi controle, (1<<2)
 breq setup_upper_bound
-ldi opi, 0x08
-cp controle, opi
-breq setup_step
-ldi opi, 0x01
-cp controle, opi
+cpi controle, (1<<3)
+breq setup_step_intermediario
+cpi controle, (1<<0)
 breq end_interrupt_setup
 ldi controle, 0x01
+rjmp end_interrupt_setup
 
+setup_step_intermediario:
+rjmp setup_step
 setup_lower_bound:
 ;;muda cor do led
+in opi, pinb
+cbr opi, (1<<blue)
+sbr opi, (1<<red)
+cbr opi, (1<<green)
+out portb, opi
 ;;pega valor do adc
+rcall ler_adc
 ;;chama binbcd
+rcall bin_bcd_10bits
 ;;carrega o valor nos regs
 rcall exibircentena
 rcall exibirdezena
 rcall exibirunidade
 ;;checa se botão foi apertado
 ;;se sim pula para end_setup_lower_bound
+in aux1, PINC
+sbrc aux1, botaosetup ;; ou sbrs
+rjmp end_setup_lower_bound
 rjmp setup_lower_bound
 
 end_setup_lower_bound:
+clr aux1
 mov opi, centena
 sts addrmincent, opi
 mov opi, dezena
@@ -301,17 +373,28 @@ reti
 
 setup_upper_bound:
 ;;muda cor do led
+in opi, pinb
+cbr opi, (1<<blue)
+cbr opi, (1<<red)
+sbr opi, (1<<green)
+out portb, opi
 ;;pega valor do adc
+rcall ler_adc
 ;;chama binbcd
+rcall bin_bcd_10bits
 ;;carrega o valor nos regs
 rcall exibircentena
 rcall exibirdezena
 rcall exibirunidade
 ;;checa se botão foi apertado
 ;;se sim pula para end_setup_upper_bound
+in aux1, PINC
+sbrc aux1, botaosetup ;; ou sbrs
+rjmp end_setup_upper_bound
 rjmp setup_upper_bound
 
 end_setup_upper_bound:
+clr aux1
 mov opi, centena
 sts addrmaxcent, opi
 mov opi, dezena
@@ -322,23 +405,98 @@ rjmp end_interrupt_setup
 
 setup_step:
 ;;muda cor do led
+in opi, pinb
+cbr opi, (1<<blue)
+cbr opi, (1<<red)
+sbr opi, (1<<green)
+out portb, opi
 ;;pega valor do adc
+rcall ler_adc
 ;;chama binbcd
+rcall bin_bcd_10bits
 ;;carrega o valor nos regs
 rcall exibircentena
 rcall exibirdezena
 rcall exibirunidade
 ;;checa se botão foi apertado
 ;;se sim pula para end_setup_step
+in aux1, PINC
+sbrc aux1, botaosetup ;; ou sbrs
+rjmp end_setup_step_p1
 rjmp setup_step
 
 end_setup_step_p1:
-clr opi
-add opi, dezena
+mov opi, dezena
+cpi opi, 0
+breq skip_add_10_setup
+ldi opi, 10
+skip_add_10_setup:
 add opi, unidade
 cpi opi, 16
-brlt end_setup_step_p2
+brlo end_setup_step_p2
 ldi opi, 15
 end_setup_step_p2:
 mov step, opi
 rjmp end_interrupt_setup
+
+;;----binbcd-----
+bin_bcd_10bits:
+clr centena
+clr dezena
+clr unidade
+bin_bcd_reverse:
+cpi XH, 0x00
+breq binbcd_old
+sbiw XH:XL, 50
+sbiw XH:XL, 50
+inc centena
+rjmp bin_bcd_reverse
+
+binbcd_old:
+mov aux, XL
+
+
+bcdcentena:
+cpi aux, 100
+brlo bcddezena
+subi aux, 100
+inc centena
+rjmp bcdcentena
+bcddezena:
+cpi aux, 10
+brlo bcdunidade
+subi aux, 10
+inc dezena
+rjmp bcddezena
+bcdunidade:
+mov unidade, aux
+
+ret
+;;----binbcd-end-------
+
+
+ler_adc:
+lds aux2, ADCSRA
+sbr aux2, (1<<ADSC)
+sts ADCSRA, aux2
+wait_conversao_ADC:
+lds aux2, ADCSRA
+sbrs aux2, ADIF
+rjmp wait_conversao_ADC
+lds XL, ADCL
+lds XH, ADCH
+lds aux2, ADCSRA
+sbr aux2, (1<<ADIF)
+sts ADCSRA, aux2
+ret
+
+
+superwaiting:
+ldi r28, 0xFF
+waitinglp1:
+rcall waiting
+dec r28
+breq end_super_waiting
+rjmp waitinglp1
+end_super_waiting:
+ret

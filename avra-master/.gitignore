@@ -1,0 +1,10 @@
+archives
+releases
+patches
+/src/avra
+*.o
+*.exe
+*.obj
+*.hex
+*.cof
+*.lst
