@@ -1,5 +1,4 @@
-#include <avr/io.h>
-#include <util/delay.h>
+#include "matriz.h"
 
 #define CS_PIN     PB2    // Chip Select pin on PORTB
 
@@ -40,24 +39,15 @@ void max7219_clear(void) {
     }
 }
 
-void max7219_draw_x(void) {
-    for (uint8_t i = 0; i < 8; i++) {
-        uint8_t pattern = (1 << i) | (1 << (7 - i));
-        max7219_send(i + 1, pattern);
+void max7219_draw_dot(int x, int y){
+    if(x>7 || y>7) return;
+
+    max7219_clear();
+    max7219_send(y+1, (1<<x));
+}
+void max7219_draw_dot_trail(int x[], int y[], int sizeoftrail){
+    max7219_clear();
+    for(int i =0; i<sizeoftrail; i++){
+        max7219_send(y[i]+1, (1<<x[i]));
     }
 }
-
-/*int main(void) {
-    spi_init();
-    max7219_init();
-    max7219_clear();
-
-    while (1) {
-        max7219_draw_x();
-        _delay_ms(1000);
-        max7219_clear();
-        _delay_ms(500);
-    }
-
-    return 0;
-}*/

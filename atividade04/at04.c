@@ -34,9 +34,9 @@ volatile unsigned int valorred = 0;
 volatile unsigned int valorblue = 0;
 volatile unsigned int valorgreen = 0;
 volatile unsigned int controle = 0x01;
-volatile unsigned int curRed = 0;
-volatile unsigned int curBlue= 0;
-volatile unsigned int curGreen=0;
+volatile  int curRed = 0;
+volatile  int curBlue= 0;
+volatile  int curGreen=0;
  char redstr[5];
  char greenstr[5];
  char bluestr[5];
@@ -48,7 +48,7 @@ void setup();
 void setPinos();
 void setInterruptions();
 void setup();
-void updateValuesRGB(unsigned int red1, unsigned int green1, unsigned int blue1);
+void updateValuesRGB(int red1,int green1, int blue1);
 void loop();
 void incRed();
 void decRed();
@@ -56,7 +56,7 @@ void incGreen();
 void decGreen();
 void incBlue();
 void decBlue();
-void saveEEPROM(unsigned int valorREDEEPROM, unsigned int valorGREENEEPROM, unsigned int valorBLUEEEPROM);
+void saveEEPROM(int valorREDEEPROM, int valorGREENEEPROM, int valorBLUEEEPROM);
 void loadEEPROM();
 void writeEEPROM(unsigned int addr, uint8_t dados);
 uint8_t readEEPROM(unsigned int addr);
@@ -99,10 +99,16 @@ void setInterruptions(){
     sei();
 }
 
-void updateValuesRGB(unsigned int red1, unsigned int green1, unsigned int blue1){
-    OCR1A = red1;
+void updateValuesRGB(int red1, int green1, int blue1){
+    if(red1==0 && green1==0 && blue1==0){
+        TCCR1A = 0x00;
+        TCCR1B = 0x00;
+        TCCR2A = 0x00;
+        TCCR2B = 0x00;
+    }else{setTimers();}
+    OCR1A = blue1;
     OCR1B = green1;
-    OCR2A = blue1;
+    OCR2A = red1;
 }
 
 
@@ -130,6 +136,7 @@ void incRed(){
 void decRed(){
     if(curRed-passo>=0) {
     curRed-=passo;}
+    if(curRed<0) curRed =0;
 }
 void incGreen(){
     if(curGreen+passo<=255) {
@@ -140,6 +147,7 @@ void decGreen(){
     if(curGreen-passo>=0){
     curGreen-=passo;
     }
+    if(curGreen<0) curGreen =0;
 }
 void incBlue(){
     if(curBlue+passo<=255) {
@@ -149,6 +157,7 @@ void incBlue(){
 void decBlue(){
     if(curBlue-passo>=0)
     {curBlue-=passo;}
+    if(curBlue<0) curBlue =0;
 }
 
 ISR(PCINT1_vect){
@@ -275,7 +284,7 @@ uint8_t readEEPROM(unsigned int addr){
     EECR |= (1 << EERE);
 return EEDR;
 }
-void saveEEPROM(unsigned int valorREDEEPROM, unsigned int valorGREENEEPROM, unsigned int valorBLUEEEPROM){
+void saveEEPROM( int valorREDEEPROM, int valorGREENEEPROM, int valorBLUEEEPROM){
     writeEEPROM(addrRED, valorREDEEPROM);
     writeEEPROM(addrGREEN,valorGREENEEPROM);
     writeEEPROM(addrBLUE, valorBLUEEEPROM);
@@ -290,15 +299,15 @@ void updateREDLCD(){
     
     lcd_goto(1,startSpotRed);
     itoa(curRed,redstr,10);
-    //if(curRed <cem) redstr[2] = ' ';
-    //if(curRed<dez ) redstr[1] = ' ';
+    if(curRed <100) redstr[2] = ' ';
+    if(curRed<10 ) redstr[1] = ' ';
     lcd_print(redstr);
 }
 void updateGREENLCD(){
     lcd_goto(1,startSpotGreen);
     itoa(curGreen, greenstr, 10);
-    //if(curGreen<cem) greenstr[2] = ' ';
-    //if (curGreen<dez) greenstr[1] = ' ';
+    if(curGreen<100) greenstr[2] = ' ';
+    if (curGreen<10) greenstr[1] = ' ';
     
     lcd_print(greenstr);
 }
@@ -307,8 +316,8 @@ void updateBLUELCD(){
     
     lcd_goto(1,startSpotBlue);
     itoa(curBlue, bluestr, 10);
-    //if(curBlue<cem) bluestr[2] = ' ';
-    //if(curBlue<dez) bluestr[1] = ' ';
+    if(curBlue<100) bluestr[2] = ' ';
+    if(curBlue<10) bluestr[1] = ' ';
     lcd_print(bluestr);
 }
 
@@ -365,7 +374,7 @@ void setTimers() {
     TCCR1B |= (1<<WGM12) |(1<<CS11);
     TCCR2A |= (1<<COM2A1) | (1<<WGM21) | (1<<WGM20);
     TCCR2B |= (1<<CS21);
-    OCR1A = curRed;
+    OCR1A = curBlue;
     OCR1B = curGreen;
-    OCR2A = curBlue;
+    OCR2A = curRed;
 }

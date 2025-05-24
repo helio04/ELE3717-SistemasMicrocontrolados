@@ -15,7 +15,8 @@ default: compile upload clean
 compile:
 	$(COMPILE) -c $(FILENAME).c -o $(FILENAME).o
 	$(COMPILE) -c lcd.c -o lcd.o
-	$(COMPILE) -o $(FILENAME).elf $(FILENAME).o lcd.o
+	$(COMPILE) -c matriz.c -o matriz.o
+	$(COMPILE) -o $(FILENAME).elf $(FILENAME).o lcd.o matriz.o
 	avr-objcopy -j .text -j .data -O ihex $(FILENAME).elf $(FILENAME).hex 
 	avr-size -C --mcu=$(DEVICE) $(FILENAME).elf
 
