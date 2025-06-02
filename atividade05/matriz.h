@@ -14,3 +14,4 @@ void max7219_init(void);
 void max7219_clear(void);
 void max7219_draw_dot(int x, int y);
 void max7219_draw_dot_trail(int x[], int y[], int size);
+void convertM(int x[], int y[]);

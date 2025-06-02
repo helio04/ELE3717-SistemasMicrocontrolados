@@ -45,6 +45,40 @@ void max7219_draw_dot(int x, int y){
     max7219_clear();
     max7219_send(y+1, (1<<x));
 }
+void convertM(int x[], int y[]){
+    uint8_t matrixaux [8] = {0,0,0,0,0,0,0,0};
+    for(int i=0; i<8; i++){
+        if(y[i] == 0 && x[i]!=0){
+            matrixaux[0] |= (1<<x[i]);
+        }
+         if(y[i] == 1){
+            matrixaux[1] |= (1<<x[i]);
+        }
+         if(y[i] == 2){
+            matrixaux[2] |= (1<<x[i]);
+        }
+         if(y[i] == 3){
+            matrixaux[3] |= (1<<x[i]);
+        }
+          if(y[i] == 4){
+            matrixaux[4] |= (1<<x[i]);
+        }
+         if(y[i] == 5){
+            matrixaux[5] |= (1<<x[i]);
+        }
+         if(y[i] == 6){
+            matrixaux[6] |= (1<<x[i]);
+        }
+         if(y[i] == 7){
+            matrixaux[7] |= (1<<x[i]);
+        }
+        
+    }
+    max7219_clear();
+    for(int i=0; i<7; i++){
+        max7219_send(i+1, matrixaux[i]);
+    }
+}
 void max7219_draw_dot_trail(int x[], int y[], int sizeoftrail){
     max7219_clear();
     for(int i =0; i<sizeoftrail; i++){
