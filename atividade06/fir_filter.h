@@ -13,5 +13,5 @@ const int16_t fir_coeffs[16] = {
 
 // Protótipo
 int16_t fir_lowpass(int16_t input);
-
+int16_t fir_lowpass(int16_t input, int16_t cf[]);
 #endif
