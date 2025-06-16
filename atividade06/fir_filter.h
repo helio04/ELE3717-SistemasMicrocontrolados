@@ -6,12 +6,13 @@
 #include <stdint.h>
 
 // Coeficientes em 16 bits (valores entre -32768 e 32767)
-const int16_t fir_coeffs[16] = {
-  -1200, -800, 400, 1800, 3000, 3800, 3800, 3000,
-  1800, 400, -800, -1200, -1600, -1600, -1200, -800
-};
+//const int16_t fir_coeffs[16] = {
+  //-1200, -800, 400, 1800, 3000, 3800, 3800, 3000,
+  //1800, 400, -800, -1200, -1600, -1600, -1200, -800
+//};
 
 // Protótipo
-int16_t fir_lowpass(int16_t input);
-int16_t fir_lowpass(int16_t input, int16_t cf[]);
+int16_t fir_lowpass2(int16_t input);
+int16_t fir_lowpass(int16_t input, volatile int16_t cf[]);
+float fir_lowpass_float(float input, const float cf[]);
 #endif

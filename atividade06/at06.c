@@ -6,6 +6,7 @@
 #include "dac_8bit.h"
 #include "adc.h"
 #include <util/delay.h>
+#include "fir_filter.h"
 #define txAmos 9600
 #define freqCorte 1000
 
@@ -27,15 +28,18 @@ void printCoef();
 ISR(PCINT1_vect);
 void setup();
 void loop();
-volatile int16_t coefs[17] = { //FC = 1kHz.
+volatile int16_t coefs1k[17] = { //FC = 1kHz.
   -1200, -800, 400, 1800, 3000, 3800, 3800, 3000,
   1800, 400, -800, -1200, -1600, -1600, -1200, -800
 };
-volatile int16_t coefs2k[17] = {
-74, 524,328, -2372, -3790,  5174, 23078, 32767, 23078,  
-5174, -3790, -2372,   328,   524,  74
+volatile float coefsfloat[17] = {
+    0.00806963, 0.01380291, 0.0298653,  0.05459908, 0.08363845, 0.11094114,
+ 0.13037733, 0.13741233, 0.13037733, 0.11094114, 0.08363845, 0.05459908,
+ 0.0298653,  0.01380291, 0.00806963
 };
 //Para FC = 2khz
+volatile int16_t coefs[17] = {//FC = 10 Hz, fs=500
+11 , 17 , 34 , 59  ,86 ,111 ,128 ,134 ,128 ,111  ,86  ,59  ,34  ,17  ,11,0};
 volatile uint8_t coefIndex = 16;
 char idex[2];
 char strCoef[10];
@@ -58,16 +62,20 @@ char testeitoa[6];
 void loop(){
     uint8_t cont =0;
     while(1){
-    int8_t value = (int8_t) (ADC_Read()>>2);
-    DAC_Write(cont);
+    //int8_t value = (int8_t) (ADC_Read()>>2);
+    int16_t output = fir_lowpass(ADC_Read(), coefs);
+    //float output = fir_lowpass_float((ADC_Read()-512)/512, coefsfloat);
+    
+    DAC_Write(output);
+    
     //DAC_Write_Reversed(cont);
-  cont +=10;
-  if(cont>250) cont=0;
+  //cont +=10;
+  //if(cont>250) cont=0;
     //lcd_goto(0,0);
     //itoa(cont, testeitoa, 10);
     //lcd_print(testeitoa);
     //_delay_ms(500);
-  _delay_ms(1000);
+  //_delay_ms(100);
     }
 }
 
@@ -127,5 +135,5 @@ ISR(PCINT1_vect){
         if(coefs[coefIndex] != -32768) coefs[coefIndex]--;
         printCoef();
     }
-    saveEEPROM(coefs);
+    //saveEEPROM(coefs);
 }

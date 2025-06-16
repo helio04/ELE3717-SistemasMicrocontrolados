@@ -68,3 +68,25 @@ void loadEEPROM(volatile int16_t cfs[]){
     cfs[15] = read16EEPROM(C15addr);
 
 }
+
+void writeFloatEEPROM(unsigned int addr, float value) {
+    uint8_t *ptr = (uint8_t*) &value;
+    for (uint8_t i = 0; i < 4; i++) {
+        writeEEPROM(addr + i, ptr[i]);
+    }
+}
+
+float readFloatEEPROM(unsigned int addr) {
+    uint8_t bytes[4];
+    for (uint8_t i = 0; i < 4; i++) {
+        bytes[i] = readEEPROM(addr + i);
+    }
+
+    float result;
+    uint8_t *ptr = (uint8_t*) &result;
+    for (uint8_t i = 0; i < 4; i++) {
+        ptr[i] = bytes[i];
+    }
+
+    return result;
+}

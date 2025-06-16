@@ -18,7 +18,8 @@ compile:
 	$(COMPILE) -c eeprom.c -o eeprom.o
 	$(COMPILE) -c dac_8bit.c -o dac_8bit.o
 	$(COMPILE) -c adc.c -o adc.o
-	$(COMPILE) -o $(FILENAME).elf $(FILENAME).o lcd.o eeprom.o dac_8bit.o adc.o
+	$(COMPILE) -c fir_filter.c -o fir_filter.o
+	$(COMPILE) -o $(FILENAME).elf $(FILENAME).o lcd.o eeprom.o dac_8bit.o adc.o fir_filter.o
 	avr-objcopy -j .text -j .data -O ihex $(FILENAME).elf $(FILENAME).hex 
 	avr-size -C --mcu=$(DEVICE) $(FILENAME).elf
 

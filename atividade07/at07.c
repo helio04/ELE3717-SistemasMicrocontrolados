@@ -21,8 +21,6 @@ void setup(){
     setButtons();
     setInterruptions();
     lcd_init();
-    //loadEEPROM(coefs);
-    printStart();
     DAC_Init();
     ADC_Init();
 }
@@ -44,5 +42,5 @@ ISR(PCINT1_vect){
         if(coefs[coefIndex] != -32768) coefs[coefIndex]--;
         printCoef();
     }
-    saveEEPROM(coefs);
+    
 }
