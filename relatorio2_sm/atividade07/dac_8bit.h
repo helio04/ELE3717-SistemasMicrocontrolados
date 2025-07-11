@@ -9,5 +9,5 @@ void DAC_Init(void);
 
 
 void DAC_Write(uint8_t value);
-
-#endif 
+void DAC_Write_Reversed(uint8_t value);
+#endif

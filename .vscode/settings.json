@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "cstdint": "cpp",
-        "matriz.h": "c"
+        "matriz.h": "c",
+        "adc.h": "c"
     }
 }
